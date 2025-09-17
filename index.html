@@ -1,75 +1,81 @@
-<body>
-<h1><p class="countdown">Voting</p></h1>
-<div class="inner-content">
-<script charset="utf-8" type="text/javascript" src="https://static.polldaddy.com/p/16030629"></script>
-</div>
-</body>
-
-<script>
 // ----- Logger -----
 function log(level, msg, error = null) {
     const time = new Date().toLocaleTimeString();
     const fullMsg = `[${time}] [${level}] ${msg}`;
     if (error) console.error(fullMsg, error);
     else console.log(fullMsg);
+
+    // Persist logs
+    let logs = JSON.parse(localStorage.getItem('scriptLogs') || '[]');
+    logs.push(fullMsg);
+    localStorage.setItem('scriptLogs', JSON.stringify(logs));
 }
 
-// ----- Voting Script -----
+window.alert = msg => log('INFO', msg);
+
+// ----- Variables -----
 var radio, vote_btn;
-var voteInterval, backInterval;
+var voteInterval, reloadInterval;
 let lastActionTime = Date.now();
 
-// Select elements
+// ----- Element Selector -----
 function select() {
     radio = document.getElementById('PDI_answer70537984');
     vote_btn = document.getElementById('pd-vote-button16030629');
-    if (!radio) log('WARN', 'Radio button not found');
-    if (!vote_btn) log('WARN', 'Vote button not found');
 }
 
-// CSP-safe click
+// ----- CSP-Safe Event Fire -----
 function eventFire(el, etype) {
     if (!el) return;
     try {
         const event = new Event(etype, { bubbles: true, cancelable: true });
         el.dispatchEvent(event);
-        log('INFO', `Event '${etype}' dispatched`);
+        log('INFO', `Event '${etype}' dispatched on`, el);
     } catch (e) {
         log('ERROR', `Failed to fire event '${etype}'`, e);
     }
 }
 
-// Health monitor
+// ----- Health Monitor -----
 setInterval(() => {
     const idleTime = ((Date.now() - lastActionTime) / 1000).toFixed(1);
     if (idleTime > 10) log('WARN', `No activity for ${idleTime} seconds`);
 }, 5000);
 
-// Voting loop
+// ----- Voting Loop (Check each element separately) -----
 voteInterval = setInterval(() => {
     try {
         select();
-        if (radio && vote_btn) {
+
+        if (radio) {
             radio.click();
-            eventFire(vote_btn, 'click');
-            log('INFO', 'Vote submitted');
+            log('INFO', 'Radio clicked');
             lastActionTime = Date.now();
-        } else log('WARN', 'Skipping vote: Elements missing');
+        } else {
+            log('WARN', 'Radio button not found');
+        }
+
+        if (vote_btn) {
+            eventFire(vote_btn, 'click');
+            log('INFO', 'Vote button clicked');
+            lastActionTime = Date.now();
+        } else {
+            log('WARN', 'Vote button not found');
+        }
+
     } catch (e) {
         log('ERROR', 'Vote interval crashed', e);
     }
 }, 3000);
 
-// Go back one page after 6 seconds
-backInterval = setInterval(() => {
-    try {
-        log('INFO', 'Going back one page in history');
-        history.back(); // WARNING: This will stop the script on the current page
-    } catch (e) {
-        log('ERROR', 'Back interval crashed', e);
-    }
-}, 6000);
+// ----- Page Reload Interval -----
+reloadInterval = setInterval(() => {
+    log('INFO', 'Reloading page...');
+    location.reload(); // Preserves logs if "Preserve log" is enabled
+}, 10000);
 
-</script>
-
-
+// ----- Show All Logs -----
+function showAllLogs() {
+    const logs = JSON.parse(localStorage.getItem('scriptLogs') || '[]');
+    console.log(logs.join('\n'));
+}
