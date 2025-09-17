@@ -6,85 +6,70 @@
 </body>
 
 <script>
-window.alert = function(msg) {
-     console.log(msg);
+// ----- Logger -----
+function log(level, msg, error = null) {
+    const time = new Date().toLocaleTimeString();
+    const fullMsg = `[${time}] [${level}] ${msg}`;
+    if (error) console.error(fullMsg, error);
+    else console.log(fullMsg);
 }
-try { var radio } catch (err) {}
-try { var vote_btn } catch (err) {}
-try { var back_btn } catch (err) {}
 
+// ----- Voting Script -----
+var radio, vote_btn;
+var voteInterval, backInterval;
+let lastActionTime = Date.now();
+
+// Select elements
 function select() {
-    radio = document.getElementById('PDI_answer70537984')
-    vote_btn = document.getElementById('pd-vote-button16030629')
-    back_btn = document.querySelector('a.pds-return-poll')
-	res_text = document.querySelector('div.pds-question-top');
+    radio = document.getElementById('PDI_answer70537984');
+    vote_btn = document.getElementById('pd-vote-button16030629');
+    if (!radio) log('WARN', 'Radio button not found');
+    if (!vote_btn) log('WARN', 'Vote button not found');
 }
 
-function eventFire(el, etype){
-  if (el.fireEvent) {
-    el.fireEvent('on' + etype);
-  } else {
-    var evObj = document.createEvent('Events');
-    evObj.initEvent(etype, true, false);
-    evObj.which = el
-    el.dispatchEvent(evObj);
-  }
+// CSP-safe click
+function eventFire(el, etype) {
+    if (!el) return;
+    try {
+        const event = new Event(etype, { bubbles: true, cancelable: true });
+        el.dispatchEvent(event);
+        log('INFO', `Event '${etype}' dispatched`);
+    } catch (e) {
+        log('ERROR', `Failed to fire event '${etype}'`, e);
+    }
 }
 
-function sleep( sleepDuration ){
-    var now = new Date().getTime();
-    while(new Date().getTime() < now + sleepDuration){ /* do nothing */ } 
-}
+// Health monitor
+setInterval(() => {
+    const idleTime = ((Date.now() - lastActionTime) / 1000).toFixed(1);
+    if (idleTime > 10) log('WARN', `No activity for ${idleTime} seconds`);
+}, 5000);
 
-var votes = 24;
-var time = -1;
-
-setInterval(function() { 
-    select()
-    try { 
-        radio.click()
-        eventFire(vote_btn, 'click')
-    } catch (e) {  }
+// Voting loop
+voteInterval = setInterval(() => {
+    try {
+        select();
+        if (radio && vote_btn) {
+            radio.click();
+            eventFire(vote_btn, 'click');
+            log('INFO', 'Vote submitted');
+            lastActionTime = Date.now();
+        } else log('WARN', 'Skipping vote: Elements missing');
+    } catch (e) {
+        log('ERROR', 'Vote interval crashed', e);
+    }
 }, 3000);
 
-setInterval(function () {
-    select();
-	
-	if(time == -1 && votes >= 24)
-	{
-		votes = 1;
-		time = 60;
-		return;
-	}
-	
-	if(time > 0)
-		return;
-	
-	if(time == -1 && res_text.textContent.indexOf("we have already counted your vote") != -1) {
-		time = 120;
-		return;
-	}
-	
-	time = -1;
-	try {
-  back_btn.click();
-} catch (e) {
-  console.warn("Back button not found or couldn't be clicked.", e);
-}
-		
-}, 1000, 500);
+// Go back one page after 6 seconds
+backInterval = setInterval(() => {
+    try {
+        log('INFO', 'Going back one page in history');
+        history.back(); // WARNING: This will stop the script on the current page
+    } catch (e) {
+        log('ERROR', 'Back interval crashed', e);
+    }
+}, 6000);
 
-setInterval(function() {
-
-  
-    document.querySelector("p.countdown").innerHTML = "Voting";
-	if (time > 0) {
-		time--;
-		document.querySelector("p.countdown").innerHTML = "Preparing to Vote: " + time;
-	}
-}, 1000);
-
-setInterval(function () {window.location.reload()}, 10*60000);
 </script>
 
 
