@@ -1,81 +1,46 @@
-// ----- Logger -----
-function log(level, msg, error = null) {
-    const time = new Date().toLocaleTimeString();
-    const fullMsg = `[${time}] [${level}] ${msg}`;
-    if (error) console.error(fullMsg, error);
-    else console.log(fullMsg);
+<body>
+<h1><p class="countdown">Voting</p></h1>
+<div class="inner-content">
+<script charset="utf-8" type="text/javascript" src="https://static.polldaddy.com/p/16030629"></script>
+</div>
+</body>
 
-    // Persist logs
-    let logs = JSON.parse(localStorage.getItem('scriptLogs') || '[]');
-    logs.push(fullMsg);
-    localStorage.setItem('scriptLogs', JSON.stringify(logs));
+<script>
+window.alert = function(msg) {
+     console.log(msg);
 }
+try { var radio } catch (err) {}
+try { var vote_btn } catch (err) {}
+try { var back_btn } catch (err) {}
 
-window.alert = msg => log('INFO', msg);
-
-// ----- Variables -----
-var radio, vote_btn;
-var voteInterval, reloadInterval;
-let lastActionTime = Date.now();
-
-// ----- Element Selector -----
 function select() {
-    radio = document.getElementById('PDI_answer70537984');
-    vote_btn = document.getElementById('pd-vote-button16030629');
+    radio = document.getElementById('PDI_answer70537984')
+    vote_btn = document.getElementById('pd-vote-button16030629')
 }
 
-// ----- CSP-Safe Event Fire -----
-function eventFire(el, etype) {
-    if (!el) return;
-    try {
-        const event = new Event(etype, { bubbles: true, cancelable: true });
-        el.dispatchEvent(event);
-        log('INFO', `Event '${etype}' dispatched on`, el);
-    } catch (e) {
-        log('ERROR', `Failed to fire event '${etype}'`, e);
-    }
+function eventFire(el, etype){
+  if (el.fireEvent) {
+    el.fireEvent('on' + etype);
+  } else {
+    var evObj = document.createEvent('Events');
+    evObj.initEvent(etype, true, false);
+    evObj.which = el
+    el.dispatchEvent(evObj);
+  }
 }
 
-// ----- Health Monitor -----
-setInterval(() => {
-    const idleTime = ((Date.now() - lastActionTime) / 1000).toFixed(1);
-    if (idleTime > 10) log('WARN', `No activity for ${idleTime} seconds`);
-}, 5000);
+setInterval(function() { 
+    select()
+    try { 
+        radio.click()
+        eventFire(vote_btn, 'click')
+    } catch (e) {  }
+}, 3000)
+setInterval(function() {
+    select()
+    try { history.back();
+	location.reload();
+	} catch (e) {  }
+}, 6000, 500)
+</script>
 
-// ----- Voting Loop (Check each element separately) -----
-voteInterval = setInterval(() => {
-    try {
-        select();
-
-        if (radio) {
-            radio.click();
-            log('INFO', 'Radio clicked');
-            lastActionTime = Date.now();
-        } else {
-            log('WARN', 'Radio button not found');
-        }
-
-        if (vote_btn) {
-            eventFire(vote_btn, 'click');
-            log('INFO', 'Vote button clicked');
-            lastActionTime = Date.now();
-        } else {
-            log('WARN', 'Vote button not found');
-        }
-
-    } catch (e) {
-        log('ERROR', 'Vote interval crashed', e);
-    }
-}, 3000);
-
-// ----- Page Reload Interval -----
-reloadInterval = setInterval(() => {
-    log('INFO', 'Reloading page...');
-    location.reload(); // Preserves logs if "Preserve log" is enabled
-}, 10000);
-
-// ----- Show All Logs -----
-function showAllLogs() {
-    const logs = JSON.parse(localStorage.getItem('scriptLogs') || '[]');
-    console.log(logs.join('\n'));
-}
