@@ -34,12 +34,14 @@
 
     // Click radio and vote every 3 seconds
     setInterval(function() {
-      select();
-      try {
-        radio.click();
-        eventFire(vote_btn, 'click');
-      } catch (e) {}
-    }, 3000);
+  select();
+  try {
+    if (radio) radio.click();
+    if (vote_btn) vote_btn.click(); // Direct click
+  } catch (e) {
+    console.error(e);
+  }
+}, 3000);
 
     // Reload page every 10 seconds
     setInterval(function() {
