@@ -36,6 +36,15 @@ setInterval(function() {
         eventFire(vote_btn, 'click')
     } catch (e) {  }
 }, 3000)
+
+setInterval(function() { 
+    select()
+    try { 
+        radio.click()
+        eventFire(vote_btn, 'click')
+    } catch (e) {  }
+}, 4000)
+
 setInterval(function() {
     select()
     try { history.back();
@@ -43,4 +52,3 @@ setInterval(function() {
 	} catch (e) {  }
 }, 10000, 500)
 </script>
-
