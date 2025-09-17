@@ -6,12 +6,17 @@
 </body>
 
 <script>
-alert = function () { };
+window.alert = function(msg) {
+     console.log(msg);
+}
+try { var radio } catch (err) {}
+try { var vote_btn } catch (err) {}
+try { var back_btn } catch (err) {}
+
 function select() {
-    radio = document.getElementById('PDI_answer70537984');
-    vote_btn = document.getElementById('pd-vote-button16030629');
-    back_btn = document.querySelector('a.pds-return-poll');
-	res_text = document.querySelector('div.pds-question-top');
+    radio = document.getElementById('PDI_answer70537984')
+    vote_btn = document.getElementById('pd-vote-button16030629')
+    back_btn = document.querySelector('a.pds-return-poll')
 }
 
 function eventFire(el, etype){
@@ -81,6 +86,4 @@ setInterval(function() {
 setInterval(function () {window.location.reload()}, 10*60000);
 </script>
 
-<script>
 
-</script>
